@@ -1,17 +1,19 @@
 <script>
-	export default {
-		onLaunch: function() {
-			console.log('App Launch')
-		},
-		onShow: function() {
-			console.log('App Show')
-		},
-		onHide: function() {
-			console.log('App Hide')
-		}
+import utils from './js_sdk/utils.js'
+export default {
+	onLaunch: function() {
+		let openid = uni.getStorageSync('openid');
+		if (!openid) openid = utils.updateOpenId();
+		utils.updateTmpKey();
+	},
+	onShow: function() {
+		
+	},
+	onHide: function() {
 	}
+}
 </script>
 
 <style>
-	/*每个页面公共css */
+/*每个页面公共css */
 </style>

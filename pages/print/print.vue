@@ -1,8 +1,8 @@
 <template>
 	<view style="display: flex; flex-direction: column;">
 		<view class="btn">
-			<view style="btn-upload" @click="chooseFile">上传文件</view>
-			<view style="btn-print" @click="printFile(chooseFileList)">打印</view>
+			<view style="btn-upload" @click="chooseFile">选择文件</view>
+			<view style="btn-print" @click="printFile(chooseFileList)">上传打印</view>
 		</view>
 		<view class="fileList">
 			<uni-card style="width: 75vw; margin: 30rpx auto;" v-for="(item, index) in chooseFileList">
@@ -11,6 +11,9 @@
 					<view class="body">
 						<text class="name">{{ item.name }}</text>
 						<text class="size">文件大小: {{ sizeToView(item.size) }}</text>
+					</view>
+					<view class="status">
+						<text>{{ item.status }}</text>
 					</view>
 				</view>
 			</uni-card>
@@ -22,25 +25,12 @@
 export default {
 	data() {
 		return {
-			chooseFileList: [
-				{
-					name: 'c++API.chm',
-					path: 'http://tmp/MuI4fkN0NAUb9277923d4de619c05e72e0eefa9479f4.chm',
-					size: 124881,
-					time: 1378684550,
-					type: 'file'
-				},
-				{
-					name: '经济法总结.docx',
-					path: 'http://tmp/MuI4fkN0NAUb9277923d4de619c05e72e0eefa9479f4.chm',
-					size: 124881,
-					time: 1378684550,
-					type: 'file'
-				}
-			]
+			chooseFileList: []
 		};
 	},
 	methods: {
+		upFileToCos(info) {
+		},
 		sizeToView(size) {
 			let res = '';
 			if (size >= 1048576) {
@@ -53,14 +43,23 @@ export default {
 			return res;
 		},
 		fileUpload(res) {
-			console.log('willup');
-			console.log(res);
-			console.log(this.chooseFileList);
-			this.chooseFileList = this.chooseFileList.concat(res.tempFiles);
-			console.log(this.chooseFileList);
+			let info;
+			for (let i in res.tempFiles) {
+				info = res.tempFiles[i];
+				info.status = '待上传';
+				this.chooseFileList.push(info);
+			}
 		},
 		printFile(opt) {
-			for (let i in opt) console.log(opt[i].name);
+			let openid = uni.getStorageSync('openid');
+			let filePath, filename;
+			for (let i in opt) {
+				this.chooseFileList[i].status = '上传中';
+				filePath = this.chooseFileList[i].path;
+				filename = filePath.substr(filePath.lastIndexOf('/') + 1);
+
+				uploadFileToTencentClound(filename, filePath);
+			}
 		},
 		chooseFile() {
 			// #ifdef H5
@@ -82,16 +81,33 @@ export default {
 	}
 };
 </script>
-
 <style>
 .fileInfo {
-	width: 50vw;
 	display: flex;
 }
 
 .fileInfo .body {
 	display: flex;
+	flex-grow: 1;
 	flex-direction: column;
+}
+
+.fileInfo .status {
+	display: flex;
+	flex-grow: 1;
+	flex-direction: row-reverse;
+	align-items: center;
+	text-align: center;
+	font-size: 12px;
+}
+
+.fileInfo .status text {
+	width: 96rpx;
+	display: inline-block;
+	padding: 4rpx;
+	background-color: #007aff;
+	color: #ffffff;
+	border-radius: 6rpx;
 }
 
 .fileInfo image {

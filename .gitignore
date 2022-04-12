@@ -14,3 +14,6 @@ unpackage/dist/dev/
 
 # python
 *.pyc
+
+js_sdk/tencentcloud-plugin-cos
+uniCloud-tcb/
