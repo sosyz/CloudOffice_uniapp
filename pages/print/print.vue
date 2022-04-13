@@ -57,8 +57,11 @@ export default {
 				this.chooseFileList[i].status = '上传中';
 				filePath = this.chooseFileList[i].path;
 				filename = filePath.substr(filePath.lastIndexOf('/') + 1);
-
-				uploadFileToTencentClound(filename, filePath);
+				uploadFile(filePath, filename, ()=>{
+					console.log("****callback********");
+					console.log(this.chooseFileList);
+					this.chooseFileList[i].status = '上传完成';
+				});
 			}
 		},
 		chooseFile() {
