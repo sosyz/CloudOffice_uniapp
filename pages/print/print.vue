@@ -22,6 +22,9 @@
 </template>
 
 <script>
+import utils from '/lib/utils.js';
+import uploadcos from '/lib/cos.js';
+
 export default {
 	data() {
 		return {
@@ -29,8 +32,6 @@ export default {
 		};
 	},
 	methods: {
-		upFileToCos(info) {
-		},
 		sizeToView(size) {
 			let res = '';
 			if (size >= 1048576) {
@@ -50,18 +51,17 @@ export default {
 				this.chooseFileList.push(info);
 			}
 		},
-		printFile(opt) {
+		async printFile(opt) {
 			let openid = uni.getStorageSync('openid');
-			let filePath, filename;
+			let filePath;
+			let res;
 			for (let i in opt) {
 				this.chooseFileList[i].status = '上传中';
 				filePath = this.chooseFileList[i].path;
-				filename = filePath.substr(filePath.lastIndexOf('/') + 1);
-				uploadFile(filePath, filename, ()=>{
-					console.log("****callback********");
-					console.log(this.chooseFileList);
-					this.chooseFileList[i].status = '上传完成';
-				});
+				console.log(uploadcos)
+				res = await uploadcos.uploadFile(filePath);
+				this.chooseFileList[i].status = res;
+				
 			}
 		},
 		chooseFile() {
@@ -80,7 +80,7 @@ export default {
 				success: this.fileUpload
 			});
 			// #endif
-		}
+		},
 	}
 };
 </script>
