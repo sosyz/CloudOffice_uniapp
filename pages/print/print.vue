@@ -57,11 +57,10 @@ export default {
 			let res;
 			for (let i in opt) {
 				this.chooseFileList[i].status = '上传中';
-				filePath = this.chooseFileList[i].path;
 				console.log(uploadcos)
-				res = await uploadcos.uploadFile(filePath);
-				this.chooseFileList[i].status = res;
-				
+				uploadcos.uploadFile(this.chooseFileList[i].path, this.chooseFileList[i].name, (status)=>{
+					this.chooseFileList[i].status = status;
+				});	
 			}
 		},
 		chooseFile() {
