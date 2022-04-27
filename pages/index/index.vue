@@ -17,7 +17,7 @@
 			<view class="print" style="order: 1;">
 				<view class="card btn" style="background: linear-gradient(20deg, #f12711, #f5af19); display: flex; flex-direction: column;" @tap="goto('/pages/print/print')">
 					<cover-image style="width: 128rpx; height: 128rpx;" src="../../static/res/img/printer.png"></cover-image>
-					<a class="hm" style="color: white; font-size: 64rpx; margin-top: 36rpx;">打印</a>
+					<text class="hm" style="color: white; font-size: 64rpx; margin-top: 36rpx;">打印</text>
 				</view>
 			</view>
 			<view class="other">
