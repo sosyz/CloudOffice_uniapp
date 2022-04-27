@@ -24,14 +24,43 @@
 <script>
 import utils from '/lib/utils.js';
 import uploadcos from '/lib/cos.js';
+import config from '/lib/config.js'
 
+const to = promise => {
+	return promise.then(res => [null, res]).catch(error => [error]);
+};
 export default {
 	data() {
 		return {
-			chooseFileList: []
+			chooseFileList: [],
+			uploadStatus: false
 		};
 	},
 	methods: {
+		onload: () => {
+			console.log(getApp())
+		},
+		async getPayOption() {
+			console.log("cnf", config)
+			let error, res;
+			[error, res] = await to(uni.request({
+				method: 'POST',
+				url: config.url + '/order/pay',
+			}));
+			if (error != null) {
+				uni.showModal({
+					title:"获取订单数据失败",
+					content: error,
+					showCancel: false
+				})
+				console.log("获取订单数据失败", error);
+			} else if (res.data.code === 0) {
+				res = res.data;
+				getApp().globalData.orderParams = res.opt;
+			}else{
+				console.log("登录失败", res.msg);
+			}
+		},
 		sizeToView(size) {
 			let res = '';
 			if (size >= 1048576) {
@@ -52,16 +81,38 @@ export default {
 			}
 		},
 		async printFile(opt) {
+			if (this.uploadStatus) return;
+			this.uploadStatus = true;
 			let openid = uni.getStorageSync('openid');
 			let filePath;
 			let res;
-			for (let i in opt) {
-				this.chooseFileList[i].status = '上传中';
-				console.log(uploadcos)
-				uploadcos.uploadFile(this.chooseFileList[i].path, this.chooseFileList[i].name, (status)=>{
-					this.chooseFileList[i].status = status;
-				});	
+			console.log(opt.length)
+			if (opt.length > 0){
+				let list = [];
+				for (let i in opt) {
+					this.chooseFileList[i].status = '上传中';
+					console.log(uploadcos)
+					list.push(uploadcos.uploadFile(this.chooseFileList[i].path, this.chooseFileList[i].name, (status)=>{
+						this.chooseFileList[i].status = status;
+					}));
+				}
+				Promise.all(list).then( async (values)=> {
+					console.log('上传完成');
+				}).catch( (error)=> {
+					uni.showModal({
+						title: '部分文件上传失败，打印将忽略该部分文件',
+						content: error,
+						showCancel: false
+					});
+					console.log('error', values);
+				})
+				console.log(getApp())
+				await this.getPayOption();
+				uni.navigateTo({
+					url: '../order/pay'
+				});
 			}
+			this.uploadStatus = false;
 		},
 		chooseFile() {
 			// #ifdef H5
