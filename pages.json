@@ -30,12 +30,8 @@
 			"path": "pages/order/pay",
 			"style": {
 				"navigationBarTitleText": "",
-				"enablePullDownRefresh": false,
-				"usingComponents": {
-					"payjs": "/components/payjs/payjs"
-				}
-			},
-
+				"enablePullDownRefresh": false
+			}
 		}
 	],
 	"globalStyle": {
