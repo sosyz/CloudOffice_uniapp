@@ -39,7 +39,7 @@
 </template>
 
 <script>
-const url = 'https://cdn-1251472184.cos.ap-beijing.myqcloud.com/font/HarmonyOS_Sans.ttf';
+//const url = 'https://cdn-1251472184.cos.ap-beijing.myqcloud.com/font/HarmonyOS_Sans.ttf';
 export default {
 	data() {
 		return {
@@ -75,9 +75,7 @@ export default {
 </script>
 
 <style>
-.hm {
-	font-family: 'HarmonyOS Sans';
-}
+
 .btn:active {
 	background-image: linear-gradient(rgba(33, 31, 31, 0.15), rgba(33, 31, 31, 0.15));
 }

@@ -40,12 +40,13 @@ export default {
 		onload: () => {
 			console.log(getApp())
 		},
-		async getPayOption() {
+		async getPayOption(option) {
 			console.log("cnf", config)
 			let error, res;
 			[error, res] = await to(uni.request({
 				method: 'POST',
 				url: config.url + '/order/pay',
+				data: option
 			}));
 			if (error != null) {
 				uni.showModal({
@@ -56,7 +57,8 @@ export default {
 				console.log("获取订单数据失败", error);
 			} else if (res.data.code === 0) {
 				res = res.data;
-				getApp().globalData.orderParams = res.opt;
+				return res.opt;
+				//getApp().globalData.orderParams = res.opt;
 			}else{
 				console.log("登录失败", res.msg);
 			}
@@ -91,13 +93,15 @@ export default {
 				let list = [];
 				for (let i in opt) {
 					this.chooseFileList[i].status = '上传中';
+					let filetag = await utils.UploadStart(openid + '/' + this.chooseFileList[i].name);
+					this.chooseFileList[i].fileTag = filetag;
 					console.log(uploadcos)
 					list.push(uploadcos.uploadFile(this.chooseFileList[i].path, this.chooseFileList[i].name, (status)=>{
 						this.chooseFileList[i].status = status;
 					}));
 				}
 				Promise.all(list).then( async (values)=> {
-					console.log('上传完成');
+					console.log('上传完成', values);
 				}).catch( (error)=> {
 					uni.showModal({
 						title: '部分文件上传失败，打印将忽略该部分文件',
@@ -106,10 +110,11 @@ export default {
 					});
 					console.log('error', values);
 				})
-				console.log(getApp())
-				await this.getPayOption();
+				
+				let opt = await this.getPayOption(this.chooseFileList);
 				uni.navigateTo({
-					url: '../order/pay'
+					url: '../order/pay',
+					events: opt
 				});
 			}
 			this.uploadStatus = false;

@@ -44,8 +44,10 @@ export default {
 			paying: false // 可选：如需知晓用户是否「已经跳转到了 PAYJS 小程序还未返回」的状态则可通过事件处理函数监听事件内的 paying 数据
 		};
 	},
-	onLoad: () => {
-		getApp().globalData.payjsOrderId = '114514';
+	onLoad: (option) => {
+		this.orderInfoDemo = option;
+		console.log(this.orderInfoDemo);
+		//getApp().globalData.payjsOrderId = '114514';
 	},
 	methods: {
 		//跳转到Payjs小程序支付
@@ -145,7 +147,7 @@ export default {
 }
 .orderFile view:nth-child(1){
 	font-size: 1.2em;
-	color: coral;
+	color: #000000;
 }
 
 .orderFile view:nth-child(2){
