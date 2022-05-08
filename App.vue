@@ -8,8 +8,6 @@ export default {
 			msg: '等待支付',
 			paySuccess: false
 		};
-		await utils.login();
-		await utils.updateTmpKey();
 	},
 	onShow: function(options) {
 		// #ifdef MP-WEIXIN

@@ -40,6 +40,8 @@
 
 <script>
 //const url = 'https://cdn-1251472184.cos.ap-beijing.myqcloud.com/font/HarmonyOS_Sans.ttf';
+import utils from '/lib/utils.js';
+//const utils = require('../../lib/utils.js')
 export default {
 	data() {
 		return {
@@ -53,8 +55,14 @@ export default {
 			mode: 'round'
 		};
 	},
-	onLoad() {},
+	onLoad() {
+		this.init()
+	},
 	methods: {
+		init: async () => {
+			await utils.login();
+			await utils.updateTmpKey();
+		},
 		goto(url) {
 			uni.navigateTo({
 				url: url
