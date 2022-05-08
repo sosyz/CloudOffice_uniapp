@@ -1,18 +1,18 @@
 <template>
 	<view class="container">
 		<uni-card title="文件列表" style="margin: 30rpx auto;">
-			<view class="orderFile" v-for="(item, index) in orderInfoDemo.list">
+			<view class="orderFile" v-for="(item, index) in fileList">
 				<view>{{ item.name }}</view>
 				<view>{{ item.pages }}张 * {{ item.num }}份</view>
 			</view>
 		</uni-card>
 		<view class="row">
-			<view>订单号: {{ orderInfoDemo.out_trade_no }}</view>
+			<view>订单号: {{ orderInfo.out_trade_no }}</view>
 		</view>
 		<view class="row">
 			<view>
 				支付金额:
-				<text style="font-size: 1.5em; color: crimson;">{{ orderInfoDemo.total_fee / 100  }}</text>
+				<text style="font-size: 1.5em; color: crimson;">{{ orderInfo.total_fee / 100 }}</text>
 				元
 			</view>
 		</view>
@@ -22,19 +22,22 @@
 </template>
 
 <script>
-const config = getApp().globalData.config;
+import utils from '/lib/utils.js';
 
+const to = promise => {
+	return promise.then(res => [null, res]).catch(error => [error]);
+};
 export default {
 	data() {
 		return {
-			orderInfoDemo: {
-				mchid: 123,
-				total_fee: 121,
-				out_trade_no: 'TEST-123123',
-				nonceStr: 'pqikjd91kfewifj192dk',
-				sign: '123123123123',
-				list: [{ name: '文件1', pages: 3, num: 1 }, { name: '文件2', pages: 1, num: 1 }, { name: '文件3', pages: 13, num: 2 }]
+			orderInfo: {
+				mchid: null,
+				total_fee: null,
+				out_trade_no: 'null',
+				nonceStr: 'null',
+				sign: 'null'
 			},
+			fileList: [{ name: 'null', pages: null, num: null }],
 			orderResults: {}, // 支付结果
 			preparePay: false, // 用户点击了支付按钮（订单信息交由 payjs 组件）
 			paying: false, // 标记用户是否已经点击了「支付」并成功跳转到 PAYJS 小程序，该参数由 payjs 组件维护，用户可监听以在 onShow 生命周期函数中判断
@@ -44,19 +47,35 @@ export default {
 			paying: false // 可选：如需知晓用户是否「已经跳转到了 PAYJS 小程序还未返回」的状态则可通过事件处理函数监听事件内的 paying 数据
 		};
 	},
-	onLoad: (option) => {
-		this.orderInfoDemo = option;
-		console.log(this.orderInfoDemo);
+	onLoad(option) {
+		// #ifdef APP-NVUE
+		const eventChannel = this.$scope.eventChannel; // 兼容APP-NVUE
+		// #endif
+		// #ifndef APP-NVUE
+		const eventChannel = this.getOpenerEventChannel();
+		// #endif
+		// 监听acceptDataFromOpenerPage事件，获取上一页面通过eventChannel传送到当前页面的数据
+		const that = this;
+		eventChannel.on('fileList', function(data) {
+			console.log(data);
+			that.fileList = data.data;
+		});
+		console.log(option.orderID);
+		utils.getPayInfo(option.orderID, opt => {
+			console.log('this.orderInfo', this.orderInfo);
+			console.log('opt', opt);
+			this.orderInfo = opt;
+		});
 		//getApp().globalData.payjsOrderId = '114514';
 	},
 	methods: {
 		//跳转到Payjs小程序支付
-		GoPay: () => {
-			this.orderParams = getApp().globalData.orderParams;
+		GoPay() {
+			console.log(this.orderInfo)
 			uni.navigateToMiniProgram({
 				appId: 'wx959c8c1fb2d877b5',
 				path: 'pages/pay',
-				extraData: this.orderParams,
+				extraData: this.orderInfo,
 				envVersion: 'release',
 				success: res => {
 					console.log('[PAYJS] 跳转到 PAYJS 小程序成功', res);
@@ -145,12 +164,12 @@ export default {
 .orderFile {
 	margin-top: 10rpx;
 }
-.orderFile view:nth-child(1){
+.orderFile view:nth-child(1) {
 	font-size: 1.2em;
 	color: #000000;
 }
 
-.orderFile view:nth-child(2){
+.orderFile view:nth-child(2) {
 	font-size: 0.9em;
 }
 </style>
