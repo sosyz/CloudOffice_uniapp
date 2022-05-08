@@ -40,13 +40,19 @@ export default {
 		onload: () => {
 			console.log(getApp())
 		},
-		async getPayOption(option) {
-			console.log("cnf", config)
+		async getOrderID(option) {
 			let error, res;
 			[error, res] = await to(uni.request({
+				url: config.url + 'order/merge',
 				method: 'POST',
-				url: config.url + '/order/pay',
-				data: option
+				header: {
+					'content-type': 'application/x-www-form-urlencoded',
+				},
+				data: {
+					openid: getApp().globalData.openid,
+					session: getApp().globalData.session,
+					option: JSON.stringify(option)
+				}
 			}));
 			if (error != null) {
 				uni.showModal({
@@ -57,10 +63,14 @@ export default {
 				console.log("获取订单数据失败", error);
 			} else if (res.data.code === 0) {
 				res = res.data;
-				return res.opt;
-				//getApp().globalData.orderParams = res.opt;
+				return res.orderID;
 			}else{
-				console.log("登录失败", res.msg);
+				uni.showModal({
+					title:"获取订单数据失败",
+					content: res.message,
+					showCancel: false
+				})
+				console.log("获取订单数据失败", res);
 			}
 		},
 		sizeToView(size) {
@@ -92,32 +102,64 @@ export default {
 			if (opt.length > 0){
 				let list = [];
 				for (let i in opt) {
-					this.chooseFileList[i].status = '上传中';
-					let filetag = await utils.UploadStart(openid + '/' + this.chooseFileList[i].name);
-					this.chooseFileList[i].fileTag = filetag;
+					this.chooseFileList[i].status = '开始上传';
+					this.chooseFileList[i].fid = await utils.UploadStart(this.chooseFileList[i].name, this.chooseFileList[i].path);
 					console.log(uploadcos)
-					list.push(uploadcos.uploadFile(this.chooseFileList[i].path, this.chooseFileList[i].name, (status)=>{
+					uploadcos.uploadFile(this.chooseFileList[i].path, this.chooseFileList[i].name, async (status)=>{
 						this.chooseFileList[i].status = status;
-					}));
-				}
-				Promise.all(list).then( async (values)=> {
-					console.log('上传完成', values);
-				}).catch( (error)=> {
-					uni.showModal({
-						title: '部分文件上传失败，打印将忽略该部分文件',
-						content: error,
-						showCancel: false
+						if (status == "完成" || status == "失败"){
+							if (status == "完成"){
+								this.chooseFileList[i].pageNum = await utils.UploadComplete(this.chooseFileList[i].fid);//需要等待云端页数获取完成
+							}
+							let cnt = 0;
+							for (i in this.chooseFileList){
+								// 将道理这个方法多少有点蠢 找时间改下
+								if (this.chooseFileList[i].status == "完成" || this.chooseFileList[i].status == "失败"){
+									cnt++;
+								}
+							}
+							if (cnt == this.chooseFileList.length){
+								console.log('全部上传完成', status);
+								this.goPay();
+							}else{
+								console.log('尚有未完成', status);
+							}
+						}
 					});
-					console.log('error', values);
-				})
-				
-				let opt = await this.getPayOption(this.chooseFileList);
-				uni.navigateTo({
-					url: '../order/pay',
-					events: opt
-				});
+				}
 			}
 			this.uploadStatus = false;
+		},
+		async goPay() {
+			let fids = [];
+			console.log(this.chooseFileList[0])
+			for (let i in this.chooseFileList){
+				fids.push(this.chooseFileList[i].fid);
+			}
+			console.log(fids)
+			const that = this;
+			let orderID = await this.getOrderID(fids);
+			uni.navigateTo({
+				url: '../order/pay?orderID=' + orderID,
+				events: {
+					payStatus: function(data){
+						console.log(data);
+					}
+				},
+				success: function(res){
+					let printList = [];
+					for (let i in that.chooseFileList){
+						printList.push({
+							name: that.chooseFileList[i].name,
+							pages: that.chooseFileList[i].pageNum,
+							num: 1
+						})
+					}
+					res.eventChannel.emit('fileList', {
+						data: printList
+					})
+				}
+			});
 		},
 		chooseFile() {
 			// #ifdef H5
