@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import utils from '/lib/utils.js';
+import utils from '@/utils/CloudAPI';
 
 const to = promise => {
 	return promise.then(res => [null, res]).catch(error => [error]);

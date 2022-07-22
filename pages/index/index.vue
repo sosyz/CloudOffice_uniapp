@@ -15,21 +15,28 @@
 		</view>
 		<view class="menu">
 			<view class="print" style="order: 1;">
-				<view class="card btn" style="background: linear-gradient(20deg, #f12711, #f5af19); display: flex; flex-direction: column;" @tap="goto('/pages/print/print')">
-					<cover-image style="width: 128rpx; height: 128rpx;" src="../../static/res/img/printer.png"></cover-image>
+				<view class="card btn"
+					style="background: linear-gradient(20deg, #f12711, #f5af19); display: flex; flex-direction: column;"
+					@tap="goto('/pages/print/print')">
+					<cover-image style="width: 128rpx; height: 128rpx;" src="../../static/res/img/printer.png">
+					</cover-image>
 					<text class="hm" style="color: white; font-size: 64rpx; margin-top: 36rpx;">打印</text>
 				</view>
 			</view>
 			<view class="other">
 				<view class="item">
-					<view class="card" style="background: linear-gradient(20deg, #3f8fe1cc 0%, #44d7c9 100%);" @tap="goto('/pages/order/order')">
-						<cover-image style="width: 84rpx; height: 84rpx;" src="../../static/res/img/order.png"></cover-image>
+					<view class="card" style="background: linear-gradient(20deg, #3f8fe1cc 0%, #44d7c9 100%);"
+						@tap="goto('/pages/order/order')">
+						<cover-image style="width: 84rpx; height: 84rpx;" src="../../static/res/img/order.png">
+						</cover-image>
 						<text class="hm" style="color: white; font-size: 64rpx;">订单</text>
 					</view>
 				</view>
 				<view class="item">
-					<view class="card btn" style="background: linear-gradient(20deg, #00b09b, #96c93d);" @tap="goto('/pages/user/user')">
-						<cover-image style="width: 84rpx; height: 84rpx; " src="../../static/res/img/mine.png"></cover-image>
+					<view class="card btn" style="background: linear-gradient(20deg, #00b09b, #96c93d);"
+						@tap="goto('/pages/user/user')">
+						<cover-image style="width: 84rpx; height: 84rpx; " src="../../static/res/img/mine.png">
+						</cover-image>
 						<text class="hm" style="color: white; font-size: 64rpx;">个人</text>
 					</view>
 				</view>
@@ -38,10 +45,10 @@
 	</view>
 </template>
 
-<script>
-//const url = 'https://cdn-1251472184.cos.ap-beijing.myqcloud.com/font/HarmonyOS_Sans.ttf';
-import utils from '/lib/utils.js';
-//const utils = require('../../lib/utils.js')
+<script lang="ts">
+import uniBadgeVue from "../../uni_modules/uni-badge/components/uni-badge/uni-badge.vue";
+import CloudAPI from "../../utils/CloudAPI";
+
 export default {
 	data() {
 		return {
@@ -59,9 +66,35 @@ export default {
 		this.init()
 	},
 	methods: {
-		init: async () => {
-			await utils.login();
-			await utils.updateTmpKey();
+		init: () => {
+			let provider: string;
+			uni.getProvider({
+				service: 'oauth',
+			}).then((res) => {
+				
+				console.log(res)
+				if (res.provider.includes("weixin")){
+					provider = "weixin";
+				}
+				return provider;
+			}).then((provider) => {
+				return uni.login({
+					provider: provider
+				})
+			}).then((res) => {
+				console.log(res, provider);
+				return CloudAPI.user.login(res.code, provider);
+			}).then((res) => {
+				console.log(res)
+				uni.setStorage({
+					key: 'openid',
+					data: res.data.openid
+				});
+				uni.setStorage({
+					key: 'session',
+					data: res.data.session
+				});
+			}).catch(error => console.log(error));
 		},
 		goto(url) {
 			uni.navigateTo({
@@ -83,10 +116,10 @@ export default {
 </script>
 
 <style>
-
 .btn:active {
 	background-image: linear-gradient(rgba(33, 31, 31, 0.15), rgba(33, 31, 31, 0.15));
 }
+
 .card {
 	align-items: center;
 	justify-content: center;

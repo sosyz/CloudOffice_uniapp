@@ -1,5 +1,4 @@
 <script>
-import utils from '/lib/utils.js';
 export default {
 	globalData: {},
 	onLaunch: async () => {

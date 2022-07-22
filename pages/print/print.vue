@@ -22,9 +22,7 @@
 </template>
 
 <script>
-import utils from '/lib/utils.js';
-import uploadcos from '/lib/cos.js';
-import config from '/lib/config.js'
+import utils from '@/utils/CloudAPI';
 
 const to = promise => {
 	return promise.then(res => [null, res]).catch(error => [error]);
@@ -92,43 +90,44 @@ export default {
 				this.chooseFileList.push(info);
 			}
 		},
-		async printFile(opt) {
+		printFile(opt) {
 			if (this.uploadStatus) return;
-			this.uploadStatus = true;
+			
 			let openid = uni.getStorageSync('openid');
 			let filePath;
-			let res;
+			let res, that;
+			let wt = [];
 			console.log(opt.length)
+			console.log(opt);
 			if (opt.length > 0){
+				this.uploadStatus = true;
 				let list = [];
 				for (let i in opt) {
 					this.chooseFileList[i].status = '开始上传';
-					this.chooseFileList[i].fid = await utils.UploadStart(this.chooseFileList[i].name, this.chooseFileList[i].path);
-					console.log(uploadcos)
-					uploadcos.uploadFile(this.chooseFileList[i].path, this.chooseFileList[i].name, async (status)=>{
-						this.chooseFileList[i].status = status;
-						if (status == "完成" || status == "失败"){
-							if (status == "完成"){
-								this.chooseFileList[i].pageNum = await utils.UploadComplete(this.chooseFileList[i].fid);//需要等待云端页数获取完成
-							}
-							let cnt = 0;
-							for (i in this.chooseFileList){
-								// 将道理这个方法多少有点蠢 找时间改下
-								if (this.chooseFileList[i].status == "完成" || this.chooseFileList[i].status == "失败"){
-									cnt++;
-								}
-							}
-							if (cnt == this.chooseFileList.length){
-								console.log('全部上传完成', status);
-								this.goPay();
-							}else{
-								console.log('尚有未完成', status);
-							}
-						}
-					});
+					console.log(
+						this.chooseFileList[i].name, 
+						this.chooseFileList[i].size, 
+						this.chooseFileList[i].path
+					);
+					let task = utils.file.upload(
+						this.chooseFileList[i].name, 
+						this.chooseFileList[i].size, 
+						this.chooseFileList[i].path,
+						null
+					);
+					
+					that = this;
+					task.then(res => {
+						console.log("taskOk", res);
+					})
+					wt.push(task)
 				}
+				Promise.all(wt).then(() => {
+					this.uploadStatus = false;
+				}).catch(() => {
+					this.uploadStatus = false;
+				})
 			}
-			this.uploadStatus = false;
 		},
 		async goPay() {
 			let fids = [];
